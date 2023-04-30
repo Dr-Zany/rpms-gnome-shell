@@ -123,7 +123,7 @@ Requires:       switcheroo-control
 Requires:       geoclue2-libs%{?_isa}
 Requires:       libgweather4%{?_isa}
 # needed for thunderbolt support
-Requires:       bolt%{?_isa}
+Recommends:     bolt%{?_isa}
 # Needed for launching flatpak apps etc
 # 1.8.0 is needed for source type support in the screencast portal.
 Requires:       xdg-desktop-portal-gtk >= 1.8.0
