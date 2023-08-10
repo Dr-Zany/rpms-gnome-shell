@@ -9,6 +9,14 @@ License:        GPLv2+
 URL:            https://wiki.gnome.org/Projects/GnomeShell
 Source0:        https://download.gnome.org/sources/gnome-shell/45/%{name}-%{tarball_version}.tar.xz
 
+# Needed to fix broken alt-tab (along with gnome-shell patches)
+# 2872 is the fix, but only applies clean on top of 2871
+# https://gitlab.gnome.org/GNOME/mutter/-/issues/2950
+# https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/2871
+# https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/2872
+Patch0:     2871.patch
+Patch1:     2872.patch
+
 # Replace Epiphany with Firefox in the default favourite apps list
 Patch10001: gnome-shell-favourite-apps-firefox.patch
 
