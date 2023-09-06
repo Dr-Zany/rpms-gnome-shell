@@ -1,8 +1,8 @@
 %global tarball_version %%(echo %{version} | tr '~' '.')
 
 Name:           gnome-shell
-Version:        45~beta.1
-Release:        %autorelease -b 4
+Version:        45~rc
+Release:        %autorelease
 Summary:        Window management and application launching for GNOME
 
 License:        GPLv2+
@@ -19,8 +19,6 @@ Patch: 0001-gdm-Work-around-failing-fingerprint-auth.patch
 Patch: 0001-status-keyboard-Add-a-catch-around-reload-call.patch
 Patch: 0002-status-keyboard-Load-keyboard-from-system-settings-i.patch
 Patch: 0003-status-keyboard-Use-gnome-desktop-API-for-getting-de.patch
-
-Patch: 0001-backgroundApps-Don-t-crash-if-app-id-can-t-be-looked.patch
 
 %define eds_version 3.45.1
 %define gnome_desktop_version 44.0-7
