@@ -2,7 +2,7 @@
 
 Name:           gnome-shell
 Version:        45~beta.1
-Release:        %autorelease -b 2
+Release:        %autorelease
 Summary:        Window management and application launching for GNOME
 
 License:        GPLv2+
@@ -10,15 +10,17 @@ URL:            https://wiki.gnome.org/Projects/GnomeShell
 Source0:        https://download.gnome.org/sources/gnome-shell/45/%{name}-%{tarball_version}.tar.xz
 
 # Replace Epiphany with Firefox in the default favourite apps list
-Patch10001: gnome-shell-favourite-apps-firefox.patch
+Patch: gnome-shell-favourite-apps-firefox.patch
 
 # Some users might have a broken PAM config, so we really need this
 # downstream patch to stop trying on configuration errors.
-Patch40001: 0001-gdm-Work-around-failing-fingerprint-auth.patch
+Patch: 0001-gdm-Work-around-failing-fingerprint-auth.patch
 
 Patch: 0001-status-keyboard-Add-a-catch-around-reload-call.patch
 Patch: 0002-status-keyboard-Load-keyboard-from-system-settings-i.patch
 Patch: 0003-status-keyboard-Use-gnome-desktop-API-for-getting-de.patch
+
+Patch: 0001-backgroundApps-Don-t-crash-if-app-id-can-t-be-looked.patch
 
 %define eds_version 3.45.1
 %define gnome_desktop_version 44.0-7
