@@ -12,6 +12,9 @@ Source0:        https://download.gnome.org/sources/gnome-shell/45/%{name}-%{tarb
 # Replace Epiphany with Firefox in the default favourite apps list
 Patch: gnome-shell-favourite-apps-firefox.patch
 
+# No portal helper if WebKitGTK is not installed
+Patch: optional-portal-helper.patch
+
 # Some users might have a broken PAM config, so we really need this
 # downstream patch to stop trying on configuration errors.
 Patch: 0001-gdm-Work-around-failing-fingerprint-auth.patch
