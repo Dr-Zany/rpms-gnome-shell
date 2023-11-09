@@ -127,6 +127,8 @@ Requires:       xdg-desktop-portal-gtk >= 1.8.0
 Requires:       xdg-desktop-portal-gnome
 # needed by the welcome dialog
 Recommends:     gnome-tour
+# needed for captive portal helper
+Recommends:     webkitgtk6.0%{?_isa}
 
 Provides:       desktop-notification-daemon = %{version}-%{release}
 Provides:       PolicyKit-authentication-agent = %{version}-%{release}
