@@ -1,20 +1,21 @@
-From 2298cfa0c9083fef432b9c51341f5ee75e7ebacb Mon Sep 17 00:00:00 2001
+From 0c0cc4ce1d3e08eba3e701d565398e01aa479ff7 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 16 Aug 2023 11:13:39 -0400
 Subject: [PATCH 2/3] status/keyboard: Load keyboard from system settings if
  gsettings unconfigured
 
-Right now if a user hasn't configured their input sources, the code falls back to
+Right now if a user hasn't configured their input sources, the code
+falls back to
 using the current layout on Xorg and the mutter default with wayland.
 
 This commit changes the code to instead fall back to using the system
 default (as configured by localed).
 ---
- js/ui/status/keyboard.js | 58 +++++++++++++++++++++++++++++++---------
- 1 file changed, 45 insertions(+), 13 deletions(-)
+ js/ui/status/keyboard.js | 62 +++++++++++++++++++++++++++++++---------
+ 1 file changed, 48 insertions(+), 14 deletions(-)
 
 diff --git a/js/ui/status/keyboard.js b/js/ui/status/keyboard.js
-index 7277c6d099..97e35d482c 100644
+index 4ef2f355d3..d91eb41bc6 100644
 --- a/js/ui/status/keyboard.js
 +++ b/js/ui/status/keyboard.js
 @@ -22,6 +22,9 @@ import * as Util from '../../misc/util.js';
@@ -27,7 +28,7 @@ index 7277c6d099..97e35d482c 100644
  export const LayoutMenuItem = GObject.registerClass(
  class LayoutMenuItem extends PopupMenu.PopupBaseMenuItem {
      _init(displayName, shortName) {
-@@ -263,17 +266,15 @@ class InputSourceSystemSettings extends InputSourceSettings {
+@@ -278,18 +281,16 @@ class InputSourceSystemSettings extends InputSourceSettings {
  }
  
  class InputSourceSessionSettings extends InputSourceSettings {
@@ -39,6 +40,7 @@ index 7277c6d099..97e35d482c 100644
 -        this._KEY_INPUT_SOURCES = 'sources';
          this._KEY_MRU_SOURCES = 'mru-sources';
          this._KEY_KEYBOARD_OPTIONS = 'xkb-options';
+         this._KEY_KEYBOARD_MODEL = 'xkb-model';
          this._KEY_PER_WINDOW = 'per-window';
  
 -        this._settings = new Gio.Settings({schema_id: this._DESKTOP_INPUT_SOURCES_SCHEMA});
@@ -46,9 +48,9 @@ index 7277c6d099..97e35d482c 100644
 +        this._settings = settings;
 +        this._settings.connect(`changed::${KEY_INPUT_SOURCES}`, this._emitInputSourcesChanged.bind(this));
          this._settings.connect(`changed::${this._KEY_KEYBOARD_OPTIONS}`, this._emitKeyboardOptionsChanged.bind(this));
+         this._settings.connect(`changed::${this._KEY_KEYBOARD_MODEL}`, this._emitKeyboardModelChanged.bind(this));
          this._settings.connect(`changed::${this._KEY_PER_WINDOW}`, this._emitPerWindowChanged.bind(this));
-     }
-@@ -291,7 +292,7 @@ class InputSourceSessionSettings extends InputSourceSettings {
+@@ -308,7 +309,7 @@ class InputSourceSessionSettings extends InputSourceSettings {
      }
  
      get inputSources() {
@@ -57,7 +59,7 @@ index 7277c6d099..97e35d482c 100644
      }
  
      get mruSources() {
-@@ -342,12 +343,6 @@ export class InputSourceManager extends Signals.EventEmitter {
+@@ -363,13 +364,6 @@ export class InputSourceManager extends Signals.EventEmitter {
                  Meta.KeyBindingFlags.IS_REVERSED,
                  Shell.ActionMode.ALL,
                  this._switchInputSource.bind(this));
@@ -67,10 +69,11 @@ index 7277c6d099..97e35d482c 100644
 -            this._settings = new InputSourceSessionSettings();
 -        this._settings.connect('input-sources-changed', this._inputSourcesChanged.bind(this));
 -        this._settings.connect('keyboard-options-changed', this._keyboardOptionsChanged.bind(this));
+-        this._settings.connect('keyboard-model-changed', this._keyboardModelChanged.bind(this));
  
          this._xkbInfo = KeyboardManager.getXkbInfo();
          this._keyboardManager = KeyboardManager.getKeyboardManager();
-@@ -359,16 +354,53 @@ export class InputSourceManager extends Signals.EventEmitter {
+@@ -381,16 +375,56 @@ export class InputSourceManager extends Signals.EventEmitter {
          this._ibusManager.connect('property-updated', this._ibusPropertyUpdated.bind(this));
          this._ibusManager.connect('set-content-type', this._ibusSetContentType.bind(this));
  
@@ -109,9 +112,12 @@ index 7277c6d099..97e35d482c 100644
 +        else
 +            this._settings = new InputSourceSessionSettings(this._inputSettings);
 +
-+        this._settings.connectObject('input-sources-changed', this._inputSourcesChanged.bind(this),
-+                                     'keyboard-options-changed', this._keyboardOptionsChanged.bind(this),
-+                                     'per-window-changed', this._sourcesPerWindowChanged.bind(this), this);
++        this._settings.connectObject(
++            'input-sources-changed', this._inputSourcesChanged.bind(this),
++            'keyboard-options-changed', this._keyboardOptionsChanged.bind(this),
++            'keyboard-model-changed', this._keyboardModelChanged.bind(this),
++            'per-window-changed', this._sourcesPerWindowChanged.bind(this),
++            this);
 +        this.reload();
 +    }
 +
@@ -126,5 +132,5 @@ index 7277c6d099..97e35d482c 100644
          this._reloading = true;
          this._keyboardManager.setKeyboardOptions(this._settings.keyboardOptions);
 -- 
-2.43.0
+2.43.1
 

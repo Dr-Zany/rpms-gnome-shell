@@ -1,4 +1,4 @@
-From 42355d8e9fc41b011a69e739ba536871483d41c6 Mon Sep 17 00:00:00 2001
+From d060baeb69a2a7d80fe403fc8eec90e20aa6cb7f Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 16 Aug 2023 14:09:50 -0400
 Subject: [PATCH 3/3] status/keyboard: Use gnome-desktop API for getting
@@ -12,11 +12,11 @@ This commit switches it to use a new function in gnome-desktop,
 gnome_get_default_input_sources, which does most of the heavy
 lifting itself, instead.
 ---
- js/ui/status/keyboard.js | 56 ++++++++++++++++++----------------------
- 1 file changed, 25 insertions(+), 31 deletions(-)
+ js/ui/status/keyboard.js | 59 ++++++++++++++++++----------------------
+ 1 file changed, 27 insertions(+), 32 deletions(-)
 
 diff --git a/js/ui/status/keyboard.js b/js/ui/status/keyboard.js
-index 97e35d482c..8a2f1d2f7d 100644
+index d91eb41bc6..19c36031f6 100644
 --- a/js/ui/status/keyboard.js
 +++ b/js/ui/status/keyboard.js
 @@ -3,6 +3,7 @@
@@ -36,7 +36,7 @@ index 97e35d482c..8a2f1d2f7d 100644
  export const LayoutMenuItem = GObject.registerClass(
  class LayoutMenuItem extends PopupMenu.PopupBaseMenuItem {
      _init(displayName, shortName) {
-@@ -197,9 +200,9 @@ class InputSourceSystemSettings extends InputSourceSettings {
+@@ -202,9 +205,9 @@ class InputSourceSystemSettings extends InputSourceSettings {
          this._BUS_IFACE = 'org.freedesktop.locale1';
          this._BUS_PROPS_IFACE = 'org.freedesktop.DBus.Properties';
  
@@ -46,10 +46,10 @@ index 97e35d482c..8a2f1d2f7d 100644
 +        this._inputSourceIds = [];
 +        this._inputSourceTypes = [];
 +        this._options = [];
+         this._model = '';
  
          this._reload().catch(error => {
-             logError(error, 'Could not reload system input settings');
-@@ -215,29 +218,20 @@ class InputSourceSystemSettings extends InputSourceSettings {
+@@ -221,30 +224,22 @@ class InputSourceSystemSettings extends InputSourceSettings {
      }
  
      async _reload() {
@@ -57,6 +57,7 @@ index 97e35d482c..8a2f1d2f7d 100644
 +        let inputSourceIds;
 +        let inputSourceTypes;
 +        let options;
++        let model;
          try {
 -            const result = await Gio.DBus.system.call(
 -                this._BUS_NAME,
@@ -66,7 +67,8 @@ index 97e35d482c..8a2f1d2f7d 100644
 -                new GLib.Variant('(s)', [this._BUS_IFACE]),
 -                null, Gio.DBusCallFlags.NONE, -1, null);
 -            [props] = result.deepUnpack();
-+            [inputSourceIds, inputSourceTypes, options] = await GnomeDesktop.get_default_input_sources (null);
++            [inputSourceIds, inputSourceTypes, options, model] =
++                await GnomeDesktop.get_default_input_sources(null);
          } catch (e) {
 -            log(`Could not get properties from ${this._BUS_NAME}`);
 +            logError(e, 'Could not get default input sources');
@@ -76,6 +78,7 @@ index 97e35d482c..8a2f1d2f7d 100644
 -        const layouts = props['X11Layout'].unpack();
 -        const variants = props['X11Variant'].unpack();
 -        const options = props['X11Options'].unpack();
+-        const model = props['X11Model'].unpack();
 -
 -        if (layouts !== this._layouts ||
 -            variants !== this._variants) {
@@ -88,7 +91,7 @@ index 97e35d482c..8a2f1d2f7d 100644
              this._emitInputSourcesChanged();
          }
          if (options !== this._options) {
-@@ -247,21 +241,21 @@ class InputSourceSystemSettings extends InputSourceSettings {
+@@ -258,21 +253,21 @@ class InputSourceSystemSettings extends InputSourceSettings {
      }
  
      get inputSources() {
@@ -105,7 +108,7 @@ index 97e35d482c..8a2f1d2f7d 100644
 +
 +        if (this._inputSourceIds) {
 +            sourcesList = this._inputSourceIds.map((id, index) => {
-+                return { type: this._inputSourceTypes[index], id };
++                return {type: this._inputSourceTypes[index], id};
 +            });
 +        } else {
 +            sourcesList = [];
@@ -118,8 +121,8 @@ index 97e35d482c..8a2f1d2f7d 100644
 -        return this._options.split(',');
 +        return this._options;
      }
- }
  
+     get keyboardModel() {
 -- 
-2.43.0
+2.43.1
 
