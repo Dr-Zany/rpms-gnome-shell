@@ -33,7 +33,7 @@ Patch: 0003-status-keyboard-Use-gnome-desktop-API-for-getting-de.patch
 %define adwaita_version 1.0.0
 %define mutter_version 46~beta
 %define polkit_version 0.100
-%define gsettings_desktop_schemas_version 42~beta
+%define gsettings_desktop_schemas_version 46~beta
 %define ibus_version 1.5.2
 %define gnome_bluetooth_version 1:42.3
 %define gstreamer_version 1.4.5
