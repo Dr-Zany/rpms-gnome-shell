@@ -24,6 +24,9 @@ Patch: 0001-status-keyboard-Add-a-catch-around-reload-call.patch
 Patch: 0002-status-keyboard-Load-keyboard-from-system-settings-i.patch
 Patch: 0003-status-keyboard-Use-gnome-desktop-API-for-getting-de.patch
 
+# https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/3303
+Patch: screencast-bus-name.patch
+
 %define eds_version 3.45.1
 %define gnome_desktop_version 44.0-7
 %define glib2_version 2.56.0
