@@ -2,7 +2,7 @@
 %global major_version %%(cut -d "." -f 1 <<<%{tarball_version})
 
 Name:           gnome-shell
-Version:        46.1
+Version:        46.2
 Release:        %autorelease
 Summary:        Window management and application launching for GNOME
 
@@ -23,9 +23,6 @@ Patch: 0001-gdm-Work-around-failing-fingerprint-auth.patch
 Patch: 0001-status-keyboard-Add-a-catch-around-reload-call.patch
 Patch: 0002-status-keyboard-Load-keyboard-from-system-settings-i.patch
 Patch: 0003-status-keyboard-Use-gnome-desktop-API-for-getting-de.patch
-
-# https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/3303
-Patch: screencast-bus-name.patch
 
 %define eds_version 3.45.1
 %define gnome_desktop_version 44.0-7
