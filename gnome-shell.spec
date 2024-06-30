@@ -2,7 +2,7 @@
 %global major_version %%(cut -d "." -f 1 <<<%{tarball_version})
 
 Name:           gnome-shell
-Version:        46.3.1
+Version:        47~alpha
 Release:        %autorelease
 Summary:        Window management and application launching for GNOME
 
@@ -26,14 +26,14 @@ Patch: 0003-status-keyboard-Use-gnome-desktop-API-for-getting-de.patch
 
 %define eds_version 3.45.1
 %define gnome_desktop_version 44.0-7
-%define glib2_version 2.56.0
+%define glib2_version 2.79.2
 %define gobject_introspection_version 1.49.1
 %define gjs_version 1.73.1
 %define gtk4_version 4.0.0
-%define adwaita_version 1.0.0
-%define mutter_version 46.0
+%define adwaita_version 1.5.0
+%define mutter_version 47~alpha
 %define polkit_version 0.100
-%define gsettings_desktop_schemas_version 46~beta
+%define gsettings_desktop_schemas_version 47~alpha
 %define ibus_version 1.5.2
 %define gnome_bluetooth_version 1:42.3
 %define gstreamer_version 1.4.5
@@ -224,7 +224,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/org.gnome.Shell.Porta
 %{_datadir}/dbus-1/interfaces/org.gnome.Shell.Screenshot.xml
 %{_datadir}/dbus-1/interfaces/org.gnome.ShellSearchProvider.xml
 %{_datadir}/dbus-1/interfaces/org.gnome.ShellSearchProvider2.xml
+%{_datadir}/icons/hicolor/scalable/apps/org.gnome.Shell.CaptivePortal.svg
 %{_datadir}/icons/hicolor/scalable/apps/org.gnome.Shell.Extensions.svg
+%{_datadir}/icons/hicolor/symbolic/apps/org.gnome.Shell.CaptivePortal-symbolic.svg
 %{_datadir}/icons/hicolor/symbolic/apps/org.gnome.Shell.Extensions-symbolic.svg
 %{_userunitdir}/org.gnome.Shell-disable-extensions.service
 %{_userunitdir}/org.gnome.Shell.target
