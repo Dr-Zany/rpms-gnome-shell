@@ -81,10 +81,6 @@ BuildRequires: gtk-doc
 Recommends:     gnome-bluetooth%{?_isa} >= %{gnome_bluetooth_version}
 %endif
 Requires:       gnome-desktop3%{?_isa} >= %{gnome_desktop_version}
-%if 0%{?rhel} != 7
-# Disabled on RHEL 7 to allow logging into KDE session by default
-Recommends:     gnome-session-xsession
-%endif
 Requires:       gcr%{?_isa}
 Requires:       gobject-introspection%{?_isa} >= %{gobject_introspection_version}
 Requires:       gjs%{?_isa} >= %{gjs_version}
