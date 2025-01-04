@@ -109,7 +109,9 @@ Requires:       xdg-user-dirs-gtk
 # needed for schemas
 Requires:       at-spi2-atk%{?_isa}
 # needed for on-screen keyboard
-Requires:       ibus%{?_isa} >= %{ibus_version}
+Recommends:     ibus%{?_isa} >= %{ibus_version}
+# needed for gobject-introspection typelib
+Requires:       ibus-libs%{?_isa} >= %{ibus_version}
 # needed for "show keyboard layout"
 Requires:       tecla
 # needed for the user menu
