@@ -80,7 +80,7 @@ BuildRequires:  gnome-bluetooth-libs-devel >= %{gnome_bluetooth_version}
 # Bootstrap requirements
 BuildRequires: gtk-doc
 # Handle upgrade path
-Conflicts: %{name} < 48~rc-2
+Conflicts: %{name} < 48~rc-3
 %ifnarch s390 s390x
 Recommends:     gnome-bluetooth%{?_isa} >= %{gnome_bluetooth_version}
 %endif
@@ -177,7 +177,7 @@ easy to use experience.
 
 %package common
 Summary: Common files used by %{name}
-Conflicts: %{name} < 48~rc-2
+Conflicts: %{name} < 48~rc-3
 BuildArch: noarch
 
 %description common
