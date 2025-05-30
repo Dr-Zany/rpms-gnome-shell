@@ -7,10 +7,10 @@
 %global portal_helper 1
 %endif
 
-%if 0%{?rhel} >= 10
-%bcond x11 0
-%else
+%if 0%{?fedora} && 0%{?fedora} < 43
 %bcond x11 1
+%else
+%bcond x11 0
 %endif
 
 Name:           gnome-shell
