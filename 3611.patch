@@ -1,29 +1,26 @@
-From 54e0d6ddd412e7148263eae2abce901c3c28bf64 Mon Sep 17 00:00:00 2001
+From a542e8f332cd89032db82131e30f4a1ade7270c0 Mon Sep 17 00:00:00 2001
 From: AsciiWolf <mail@asciiwolf.com>
 Date: Wed, 26 Feb 2025 17:36:08 +0100
 Subject: [PATCH] data: Replace org.gnome.Evince with org.gnome.Papers in
  Utilities
 
 ---
- data/default-apps/utilities-folder.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ data/default-apps/utilities-folder.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/data/default-apps/utilities-folder.txt b/data/default-apps/utilities-folder.txt
-index 125c36abe5..238fdae859 100644
+index 754118892..368fae487 100644
 --- a/data/default-apps/utilities-folder.txt
 +++ b/data/default-apps/utilities-folder.txt
-@@ -1,8 +1,8 @@
+@@ -1,7 +1,7 @@
  # Sorted by name as shown in menus, not filename
- org.gnome.Decibels                        # Audio Player
+ org.gnome.Decibels.desktop                # Audio Player
  org.gnome.Connections.desktop             # Connections
 -org.gnome.Evince.desktop                  # Document Viewer
 +org.gnome.Papers.desktop                  # Document Viewer
  org.gnome.FileRoller.desktop              # File Roller
  org.gnome.font-viewer.desktop             # Fonts
  org.gnome.Loupe.desktop                   # Image Viewer
--org.gnome.seahorse.Application.desktop    # Passwords and Keys
-\ No newline at end of file
-+org.gnome.seahorse.Application.desktop    # Passwords and Keys
 -- 
-GitLab
+2.49.0
 
