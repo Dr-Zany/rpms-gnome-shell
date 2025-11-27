@@ -35,8 +35,7 @@ Patch: 3939-rediffed.patch
 %define eds_version 3.45.1
 %define gnome_desktop_version 44.0-7
 %define glib2_version 2.86.0
-%define gobject_introspection_version 1.49.1
-%define gjs_version 1.73.1
+%define gjs_version 1.85.90
 %define gtk4_version 4.0.0
 %define adwaita_version 1.5.0
 %define mutter_version 49.0
@@ -59,7 +58,6 @@ BuildRequires:  pkgconfig(gjs-1.0) >= %{gjs_version}
 BuildRequires:  pkgconfig(gio-2.0) >= %{glib2_version}
 BuildRequires:  pkgconfig(gnome-autoar-0)
 BuildRequires:  pkgconfig(gnome-desktop-4) >= %{gnome_desktop_version}
-BuildRequires:  pkgconfig(gobject-introspection-1.0) >= %{gobject_introspection_version}
 BuildRequires:  mesa-libGL-devel
 BuildRequires:  mesa-libEGL-devel
 BuildRequires:  pkgconfig(libnm)
@@ -93,7 +91,6 @@ Recommends:     gnome-bluetooth%{?_isa} >= %{gnome_bluetooth_version}
 %endif
 Requires:       %{name}-common = %{version}-%{release}
 Requires:       gcr%{?_isa}
-Requires:       gobject-introspection%{?_isa} >= %{gobject_introspection_version}
 Requires:       gjs%{?_isa} >= %{gjs_version}
 Requires:       gtk4%{?_isa} >= %{gtk4_version}
 Requires:       libadwaita%{_isa} >= %{adwaita_version}
