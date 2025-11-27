@@ -41,7 +41,7 @@ Patch: 3939-rediffed.patch
 %define adwaita_version 1.5.0
 %define mutter_version 49.0
 %define polkit_version 0.100
-%define gsettings_desktop_schemas_version 48.0
+%define gsettings_desktop_schemas_version 49~alpha
 %define ibus_version 1.5.2
 %define gnome_bluetooth_version 1:42.3
 %define gstreamer_version 1.4.5
