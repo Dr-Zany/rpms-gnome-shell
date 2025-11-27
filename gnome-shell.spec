@@ -39,7 +39,7 @@ Patch: 3939-rediffed.patch
 %define gjs_version 1.73.1
 %define gtk4_version 4.0.0
 %define adwaita_version 1.5.0
-%define mutter_version 49~beta
+%define mutter_version 49.0
 %define polkit_version 0.100
 %define gsettings_desktop_schemas_version 48.0
 %define ibus_version 1.5.2
