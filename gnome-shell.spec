@@ -8,7 +8,7 @@
 %endif
 
 Name:           gnome-shell
-Version:        50~alpha
+Version:        50~beta
 Release:        %autorelease
 Summary:        Window management and application launching for GNOME
 
