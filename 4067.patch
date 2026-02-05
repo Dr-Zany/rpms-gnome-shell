@@ -1,0 +1,30 @@
+From f3189a9722d2fd3168367e007fee5dc87e8a2b79 Mon Sep 17 00:00:00 2001
+From: Michael Catanzaro <mcatanzaro@gnome.org>
+Date: Thu, 5 Feb 2026 14:37:50 -0600
+Subject: [PATCH] Fix crash on startup when using mutter 50.beta
+
+This symbol was removed in mutter!4699. Trying to promisify it causes
+GNOME Shell to crash during initialization:
+
+JS ERROR: Error: [GObject prototype of GIName:Meta.Backend jsobj@0x170d8ebe0a38] has no method named set_keymap_layout_group_async
+_promisify@resource:///org/gnome/gjs/modules/core/overrides/Gio.js:469:15
+@resource:///org/gnome/shell/ui/environment.js:37:5
+---
+ js/ui/environment.js | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/js/ui/environment.js b/js/ui/environment.js
+index 83743eeb2e..f4ff303d7e 100644
+--- a/js/ui/environment.js
++++ b/js/ui/environment.js
+@@ -34,7 +34,6 @@ Gio._promisify(Gio.File.prototype, 'query_info_async');
+ Gio._promisify(Polkit.Permission, 'new');
+ Gio._promisify(Shell.App.prototype, 'activate_action');
+ Gio._promisify(Meta.Backend.prototype, 'set_keymap_async');
+-Gio._promisify(Meta.Backend.prototype, 'set_keymap_layout_group_async');
+ 
+ // We can't import shell JS modules yet, because they may have
+ // variable initializations, etc, that depend on this file's
+-- 
+GitLab
+

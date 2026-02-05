@@ -23,6 +23,10 @@ Patch: gnome-shell-favourite-apps-firefox.patch
 # downstream patch to stop trying on configuration errors.
 Patch: 0001-gdm-Work-around-failing-fingerprint-auth.patch
 
+# https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/4067
+# fix crash caused by trying to promisify removed symbol
+Patch: 4067.patch
+
 %define eds_version 3.45.1
 %define gnome_desktop_version 44.0-7
 %define glib2_version 2.86.0
