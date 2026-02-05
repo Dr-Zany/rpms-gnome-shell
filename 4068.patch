@@ -1,14 +1,13 @@
-From f3189a9722d2fd3168367e007fee5dc87e8a2b79 Mon Sep 17 00:00:00 2001
-From: Michael Catanzaro <mcatanzaro@gnome.org>
-Date: Thu, 5 Feb 2026 14:37:50 -0600
-Subject: [PATCH] Fix crash on startup when using mutter 50.beta
+From ae7917c904dd9d80982e6e353b4bddc7420a4a98 Mon Sep 17 00:00:00 2001
+From: Carlos Garnacho <carlosg@gnome.org>
+Date: Thu, 5 Feb 2026 22:56:47 +0100
+Subject: [PATCH] environment: Drop Meta.Backend.set_keymap_layout_group_async
+ promisify
 
-This symbol was removed in mutter!4699. Trying to promisify it causes
-GNOME Shell to crash during initialization:
+This method was removed in mutter, its async promisification is not
+necessary anymore.
 
-JS ERROR: Error: [GObject prototype of GIName:Meta.Backend jsobj@0x170d8ebe0a38] has no method named set_keymap_layout_group_async
-_promisify@resource:///org/gnome/gjs/modules/core/overrides/Gio.js:469:15
-@resource:///org/gnome/shell/ui/environment.js:37:5
+Part-of: <https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/4068>
 ---
  js/ui/environment.js | 1 -
  1 file changed, 1 deletion(-)
