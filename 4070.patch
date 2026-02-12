@@ -1,0 +1,149 @@
+From 448cc9b0507af4297cdebaf9ff030c68f95fb2f8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Florian=20M=C3=BCllner?= <fmuellner@gnome.org>
+Date: Tue, 10 Feb 2026 15:29:30 +0100
+Subject: [PATCH 1/4] background: Add BackgroundManager::destroy signal
+
+It can be useful for callers to know when a background manager
+object becomes invalid, so add a signal for that purpose.
+---
+ js/ui/background.js | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/js/ui/background.js b/js/ui/background.js
+index 09edeb1bec..81cb798cf5 100644
+--- a/js/ui/background.js
++++ b/js/ui/background.js
+@@ -723,6 +723,8 @@ export class BackgroundManager extends Signals.EventEmitter {
+             this.backgroundActor.destroy();
+             this.backgroundActor = null;
+         }
++
++        this.emit('destroy');
+     }
+ 
+     _swapBackgroundActor() {
+-- 
+GitLab
+
+
+From 162499aa2af50de0da9d97cd8926b4f7ecdef815 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Florian=20M=C3=BCllner?= <fmuellner@gnome.org>
+Date: Thu, 12 Feb 2026 14:48:36 +0100
+Subject: [PATCH 2/4] layout: Catch async errors
+
+It is good practice to avoid "unhandled promise rejection" errors,
+even when a function is not expected to reject.
+---
+ js/ui/layout.js | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/js/ui/layout.js b/js/ui/layout.js
+index e68780d0e5..3a56bd745f 100644
+--- a/js/ui/layout.js
++++ b/js/ui/layout.js
+@@ -610,7 +610,7 @@ export const LayoutManager = GObject.registerClass({
+         this._updateMonitors();
+         this._updateBoxes();
+         this._updateHotCorners();
+-        this._updateBackgrounds();
++        this._updateBackgrounds().catch(logError);
+         this._updateFullscreen();
+         this._updateVisibility();
+         this._queueUpdateRegions();
+-- 
+GitLab
+
+
+From 26210a2db1919a0047f0bc4ffe5ce7d6dcbc6b02 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Florian=20M=C3=BCllner?= <fmuellner@gnome.org>
+Date: Tue, 10 Feb 2026 15:30:46 +0100
+Subject: [PATCH 3/4] layout: Reject promise if background loading is
+ interrupted
+
+Currently if a background manager is destroyed while we are waiting
+for the background to load, the corresponding promise never resolves.
+
+To prevent this from happening (and the startup animation getting
+stuck as a result), reject the promise when the background manager
+is destroyed.
+
+Closes: https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/9018
+---
+ js/ui/layout.js | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/js/ui/layout.js b/js/ui/layout.js
+index 3a56bd745f..efed578f6a 100644
+--- a/js/ui/layout.js
++++ b/js/ui/layout.js
+@@ -526,9 +526,11 @@ export const LayoutManager = GObject.registerClass({
+     }
+ 
+     _waitLoaded(bgManager) {
+-        return new Promise(resolve => {
+-            const id = bgManager.connect('loaded', () => {
+-                bgManager.disconnect(id);
++        return new Promise((resolve, reject) => {
++            const destroyId = bgManager.connect('destroy', reject);
++            const loadedId = bgManager.connect('loaded', () => {
++                bgManager.disconnect(loadedId);
++                bgManager.disconnect(destroyId);
+                 resolve();
+             });
+         });
+-- 
+GitLab
+
+
+From 9c69b910280f99960ac7bf83361605113bca0570 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Florian=20M=C3=BCllner?= <fmuellner@gnome.org>
+Date: Thu, 12 Feb 2026 13:50:47 +0100
+Subject: [PATCH 4/4] layout: Wait for backgrounds to load, even when
+ interrupted
+
+We no longer get stuck when a background manager is destroyed during
+the startup animation, but we now resolve before the new backgrounds
+have been loaded.
+
+Address this by keeping the returned promise around until it is fulfilled,
+and only resolve it after backgrounds were loaded successfully.
+---
+ js/ui/layout.js | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/js/ui/layout.js b/js/ui/layout.js
+index efed578f6a..4f7f252f49 100644
+--- a/js/ui/layout.js
++++ b/js/ui/layout.js
+@@ -536,7 +536,7 @@ export const LayoutManager = GObject.registerClass({
+         });
+     }
+ 
+-    _updateBackgrounds() {
++    async _updateBackgrounds() {
+         for (let i = 0; i < this._bgManagers.length; i++)
+             this._bgManagers[i].destroy();
+ 
+@@ -553,7 +553,18 @@ export const LayoutManager = GObject.registerClass({
+                 bgManager.backgroundActor.hide();
+         }
+ 
+-        return Promise.all(this._bgManagers.map(this._waitLoaded));
++        if (!this._updateBackgroundsResolvers)
++            this._updateBackgroundsResolvers = Promise.withResolvers();
++
++        const {promise, resolve} = this._updateBackgroundsResolvers;
++        try {
++            await Promise.all(this._bgManagers.map(this._waitLoaded));
++
++            delete this._updateBackgroundsResolvers;
++            resolve();
++        } catch {}
++
++        return promise;
+     }
+ 
+     _updateKeyboardBox() {
+-- 
+GitLab
+
