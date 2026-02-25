@@ -12,14 +12,8 @@ jobs:
   # Automated updates for stable branches
   - job: pull_from_upstream
     trigger: release
-    # Packit does the full update (spec, changelog) on the latest stable branch.
-    # The exact same commit is reused to open PRs for all other stable branches,
-    # which can be merged with fast-forward only (git merge --ff-only),
-    # keeping a linear, non-divergent history across branches.
     dist_git_branches:
-      fedora-latest-stable:
-        fast_forward_merge_into:
-          - fedora-stable
+      - fedora-stable
 
     # ========================================================================
     # VERSIONING: Choose ONE option based on your package's versioning scheme
