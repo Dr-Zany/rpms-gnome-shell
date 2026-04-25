@@ -1,0 +1,55 @@
+This is https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/4185 and
+https://gitlab.gnome.org/GNOME/gnome-shell/-/merge_requests/4188
+
+diff --git a/data/dbus-interfaces/org.gnome.Software.OfflineUpdates.xml b/data/dbus-interfaces/org.gnome.Software.OfflineUpdates.xml
+index 82356bc70..15a20fc70 100644
+--- a/data/dbus-interfaces/org.gnome.Software.OfflineUpdates.xml
++++ b/data/dbus-interfaces/org.gnome.Software.OfflineUpdates.xml
+@@ -14,8 +14,9 @@
+     <!--
+     string GetState(void):
+     Gets state of any offline updates. The returned values can be:
+-    "none" - no offline update is scheduled
+-    "scheduled" - an offline update is scheduled
++    "none" - no offline update is prepared nor scheduled
++    "prepared" - an offline update is prepared and can be scheduled by SetAction() method
++    "scheduled" - an offline update is scheduled for the next reboot
+     -->
+     <method name="GetState">
+       <arg type="s" name="state" direction="out" />
+diff --git a/js/ui/endSessionDialog.js b/js/ui/endSessionDialog.js
+index 7b666f090..45dcfad91 100644
+--- a/js/ui/endSessionDialog.js
++++ b/js/ui/endSessionDialog.js
+@@ -491,6 +491,8 @@ class EndSessionDialog extends ModalDialog.ModalDialog {
+             } else {
+                 await this._triggerOfflineUpdateCancel();
+             }
++        } else if (this._type === DialogType.UPDATE_RESTART && (this._updatePrepared || this._updateScheduled)) {
++            await this._setPostUpdateAction(OFFLINE_UPDATE_ACTION_REBOOT);
+         }
+ 
+         this._fadeOutDialog();
+@@ -668,11 +670,13 @@ class EndSessionDialog extends ModalDialog.ModalDialog {
+ 
+         try {
+             const state = await this._getUpdateState();
++            this._updatePrepared = state === 'prepared';
+             this._updateScheduled = state === 'scheduled';
+         } catch (e) {
+             if (this._softwareOfflineUpdatesProxy !== null)
+                 log(`Failed to get update info from gnome-software: ${e.message}`);
+ 
++            this._updatePrepared = false;
+             this._updateScheduled = false;
+         }
+ 
+@@ -709,7 +713,7 @@ class EndSessionDialog extends ModalDialog.ModalDialog {
+             this._loadSessions().catch(logError);
+ 
+         _setCheckBoxLabel(this._checkBox, dialogContent.checkBoxText || '');
+-        this._checkBox.visible = dialogContent.checkBoxText && this._updateScheduled;
++        this._checkBox.visible = dialogContent.checkBoxText && (this._updatePrepared || this._updateScheduled);
+ 
+         this._checkBox.checked = this._checkBox.visible && !this._isBatteryLow();
+ 
