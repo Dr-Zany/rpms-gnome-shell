@@ -1,0 +1,294 @@
+From dab04c82197c6e60f2764915673dfe8a6dc783b0 Mon Sep 17 00:00:00 2001
+From: Downstream Maintainer <downstream@example.invalid>
+Date: Sun, 2 Aug 2026 17:23:45 +0000
+Subject: [PATCH] shell: replace applications entry points with launcher
+
+Route overlay-key, Super+A and Show Apps to a compact launcher. Preserve
+overview states and workspace gestures. Let SearchResultsView support
+list rows and a caller-owned activation lifecycle.
+
+The new launcher module and Sass are supplied separately as Source100.
+Based on upstream dcda6594b153aa179d92cc62e2414d84a43ab82c.
+---
+ data/theme/gnome-shell-sass/_widgets.scss |  2 ++
+ data/theme/meson.build                    |  1 +
+ js/js-resources.gresource.xml             |  1 +
+ js/ui/dash.js                             |  3 +-
+ js/ui/main.js                             |  4 +++
+ js/ui/overview.js                         |  2 ++
+ js/ui/overviewControls.js                 | 24 ++-----------
+ js/ui/search.js                           | 44 ++++++++++++++---------
+ 8 files changed, 42 insertions(+), 39 deletions(-)
+
+diff --git a/data/theme/gnome-shell-sass/_widgets.scss b/data/theme/gnome-shell-sass/_widgets.scss
+index 9eac62d..0fdfe39 100644
+--- a/data/theme/gnome-shell-sass/_widgets.scss
++++ b/data/theme/gnome-shell-sass/_widgets.scss
+@@ -47,3 +47,5 @@
+ @import 'widgets/looking-glass';
+ // Lock / login screen
+ @import 'widgets/login-lock';
++
++@import 'widgets/launcher';
+diff --git a/data/theme/meson.build b/data/theme/meson.build
+index 8d01ae8..d2beb98 100644
+--- a/data/theme/meson.build
++++ b/data/theme/meson.build
+@@ -19,6 +19,7 @@ theme_sources = files([
+   'gnome-shell-sass/widgets/_entries.scss',
+   'gnome-shell-sass/widgets/_ibus-popup.scss',
+   'gnome-shell-sass/widgets/_keyboard.scss',
++  'gnome-shell-sass/widgets/_launcher.scss',
+   'gnome-shell-sass/widgets/_login-lock.scss',
+   'gnome-shell-sass/widgets/_looking-glass.scss',
+   'gnome-shell-sass/widgets/_message-list.scss',
+diff --git a/js/js-resources.gresource.xml b/js/js-resources.gresource.xml
+index e5e6167..59a4690 100644
+--- a/js/js-resources.gresource.xml
++++ b/js/js-resources.gresource.xml
+@@ -78,6 +78,7 @@
+     <file>ui/kbdA11yDialog.js</file>
+     <file>ui/keyboard.js</file>
+     <file>ui/layout.js</file>
++    <file>ui/launcher.js</file>
+     <file>ui/lightbox.js</file>
+     <file>ui/listModes.js</file>
+     <file>ui/locatePointer.js</file>
+diff --git a/js/ui/dash.js b/js/ui/dash.js
+index 970bf94..505dd20 100644
+--- a/js/ui/dash.js
++++ b/js/ui/dash.js
+@@ -194,7 +194,7 @@ class ShowAppsIcon extends DashItemContainer {
+             style_class: 'show-apps',
+             track_hover: true,
+             can_focus: true,
+-            toggle_mode: true,
++            toggle_mode: false,
+         });
+         this._iconActor = null;
+         this.icon = new IconGrid.BaseIcon(_('Show Apps'), {
+@@ -206,6 +206,7 @@ class ShowAppsIcon extends DashItemContainer {
+ 
+         this.toggleButton.child = this.icon;
+         this.toggleButton._delegate = this;
++        this.toggleButton.connect('clicked', () => Main.launcher.toggle());
+ 
+         this.setChild(this.toggleButton);
+         this.setDragApp(null);
+diff --git a/js/ui/main.js b/js/ui/main.js
+index 01a18b5..a88e5ee 100644
+--- a/js/ui/main.js
++++ b/js/ui/main.js
+@@ -28,6 +28,7 @@ import * as Panel from './panel.js';
+ import * as RunDialog from './runDialog.js';
+ import * as WelcomeDialog from './welcomeDialog.js';
+ import * as Layout from './layout.js';
++import * as Launcher from './launcher.js';
+ import * as LoginManager from '../misc/loginManager.js';
+ import * as LookingGlass from './lookingGlass.js';
+ import * as NotificationDaemon from './notificationDaemon.js';
+@@ -59,6 +60,7 @@ export let componentManager = null;
+ export let extensionManager = null;
+ export let panel = null;
+ export let overview = null;
++export let launcher = null;
+ export let runDialog = null;
+ export let lookingGlass = null;
+ export let welcomeDialog = null;
+@@ -279,6 +281,8 @@ async function _initializeUI() {
+ 
+     layoutManager.init();
+     overview.init();
++    if (sessionMode.hasOverview)
++        launcher = new Launcher.Launcher();
+ 
+     new PointerA11yTimeout.PointerA11yTimeout();
+ 
+diff --git a/js/ui/overview.js b/js/ui/overview.js
+index da3427b..58a6b7b 100644
+--- a/js/ui/overview.js
++++ b/js/ui/overview.js
+@@ -491,6 +491,8 @@ export class Overview extends Signals.EventEmitter {
+             return;
+         if (this._shown)
+             return;
++        // Release the launcher before the overview checks/takes its own grab.
++        Main.launcher?.close();
+         this._shown = true;
+ 
+         if (!this._syncGrab())
+diff --git a/js/ui/overviewControls.js b/js/ui/overviewControls.js
+index 1351681..d51f9a4 100644
+--- a/js/ui/overviewControls.js
++++ b/js/ui/overviewControls.js
+@@ -416,26 +416,11 @@ class ControlsManager extends St.Widget {
+ 
+         this._a11ySettings = new Gio.Settings({schema_id: A11Y_SCHEMA});
+ 
+-        this._lastOverlayKeyTime = 0;
+         global.display.connectObject('overlay-key', () => {
+             if (this._a11ySettings.get_boolean('stickykeys-enable'))
+                 return;
+ 
+-            const {initialState, finalState, transitioning} =
+-                this._stateAdjustment.getStateTransitionParams();
+-
+-            const time = GLib.get_monotonic_time() / 1000;
+-            const timeDiff = time - this._lastOverlayKeyTime;
+-            this._lastOverlayKeyTime = time;
+-
+-            const shouldShift = St.Settings.get().enable_animations
+-                ? transitioning && finalState > initialState
+-                : Main.overview.visible && timeDiff < Overview.ANIMATION_TIME;
+-
+-            if (shouldShift)
+-                this._shiftState(Meta.MotionDirection.UP);
+-            else
+-                Main.overview.toggle();
++            Main.launcher.toggle();
+         }, this);
+ 
+         // connect_after to give search controller first dibs on the event
+@@ -658,12 +643,7 @@ class ControlsManager extends St.Widget {
+     }
+ 
+     _toggleAppsPage() {
+-        if (Main.overview.visible) {
+-            const checked = this.dash.showAppsButton.checked;
+-            this.dash.showAppsButton.checked = !checked;
+-        } else {
+-            Main.overview.show(ControlsState.APP_GRID);
+-        }
++        Main.launcher.toggle();
+     }
+ 
+     _shiftState(direction) {
+diff --git a/js/ui/search.js b/js/ui/search.js
+index 88965bf..7134934 100644
+--- a/js/ui/search.js
++++ b/js/ui/search.js
+@@ -66,7 +66,7 @@ class SearchResult extends St.Button {
+             St.Clipboard.get_default().set_text(
+                 St.ClipboardType.CLIPBOARD, this.metaInfo.clipboardText);
+         }
+-        Main.overview.toggle();
++        this._resultsView.onActivated();
+     }
+ });
+ 
+@@ -194,7 +194,7 @@ const SearchResultsBase = GObject.registerClass({
+     }
+ 
+     _createResultDisplay(meta) {
+-        if (this.provider.createResultObject)
++        if (!this._resultsView.listResults && this.provider.createResultObject)
+             return this.provider.createResultObject(meta);
+ 
+         return null;
+@@ -298,15 +298,17 @@ class ListSearchResults extends SearchResultsBase {
+             style_class: 'search-section-content',
+             x_expand: true,
+         });
+-        this.providerInfo = new ProviderInfo(provider);
+-        this.providerInfo.connect('key-focus-in', this._keyFocusIn.bind(this));
+-        this.providerInfo.connect('clicked', () => {
+-            this.providerInfo.animateLaunch();
+-            provider.launchSearch(this._terms);
+-            Main.overview.toggle();
+-        });
++        this.providerInfo = provider.appInfo ? new ProviderInfo(provider) : null;
++        if (this.providerInfo) {
++            this.providerInfo.connect('key-focus-in', this._keyFocusIn.bind(this));
++            this.providerInfo.connect('clicked', () => {
++                this.providerInfo.animateLaunch();
++                provider.launchSearch(this._terms);
++                this._resultsView.onActivated();
++            });
+ 
+-        this._container.add_child(this.providerInfo);
++            this._container.add_child(this.providerInfo);
++        }
+ 
+         this._content = new St.BoxLayout({
+             style_class: 'list-search-results',
+@@ -319,7 +321,7 @@ class ListSearchResults extends SearchResultsBase {
+     }
+ 
+     _setMoreCount(count) {
+-        this.providerInfo.setMoreCount(count);
++        this.providerInfo?.setMoreCount(count);
+     }
+ 
+     _getMaxDisplayedResults() {
+@@ -567,7 +569,8 @@ class GridSearchResults extends SearchResultsBase {
+ export const SearchResultsView = GObject.registerClass({
+     Signals: {'terms-changed': {}},
+ }, class SearchResultsView extends St.BoxLayout {
+-    _init() {
++    _init({appProvider = new AppDisplay.AppSearchProvider(),
++        listResults = false, onActivated = () => Main.overview.toggle()} = {}) {
+         super._init({
+             name: 'searchResults',
+             orientation: Clutter.Orientation.VERTICAL,
+@@ -575,6 +578,10 @@ export const SearchResultsView = GObject.registerClass({
+             y_expand: true,
+         });
+ 
++        // The overview keeps its existing icons and activation lifecycle.
++        this.listResults = listResults;
++        this.onActivated = onActivated;
++
+         this._parentalControlsManager = ParentalControlsManager.getDefault();
+         this._parentalControlsManager.connect('app-filter-changed', this._reloadRemoteProviders.bind(this));
+ 
+@@ -636,7 +643,7 @@ export const SearchResultsView = GObject.registerClass({
+         this._searchTimeoutId = 0;
+         this._cancellable = new Gio.Cancellable();
+ 
+-        this._registerProvider(new AppDisplay.AppSearchProvider());
++        this._registerProvider(appProvider);
+ 
+         const appSystem = Shell.AppSystem.get_default();
+         appSystem.connect('installed-changed', this._reloadRemoteProviders.bind(this));
+@@ -690,6 +697,7 @@ export const SearchResultsView = GObject.registerClass({
+         this._terms = [];
+         this._results = {};
+         this._clearDisplay();
++        this._providers.forEach(provider => (provider.searchInProgress = false));
+         this._clearSearchTimeout();
+         this._defaultResult = null;
+         this._startingSearch = false;
+@@ -702,6 +710,7 @@ export const SearchResultsView = GObject.registerClass({
+ 
+         let results = [];
+         const terms = this._terms;
++        const cancellable = this._cancellable;
+         try {
+             if (this._isSubSearch && previousResults) {
+                 results = await provider.getSubsearchResultSet(
+@@ -714,8 +723,11 @@ export const SearchResultsView = GObject.registerClass({
+                     this._cancellable);
+             }
+         } finally {
+-            this._results[provider.id] = results;
+-            await this._updateResults(provider, terms, results);
++            // A popup may reset its search while a provider is still replying.
++            if (!cancellable.is_cancelled() && this._providers.includes(provider)) {
++                this._results[provider.id] = results;
++                await this._updateResults(provider, terms, results);
++            }
+         }
+     }
+ 
+@@ -793,7 +805,7 @@ export const SearchResultsView = GObject.registerClass({
+             return;
+ 
+         let providerDisplay;
+-        if (provider.appInfo)
++        if (provider.appInfo || this.listResults)
+             providerDisplay = new ListSearchResults(provider, this);
+         else
+             providerDisplay = new GridSearchResults(provider, this);
+-- 
+2.54.0
+

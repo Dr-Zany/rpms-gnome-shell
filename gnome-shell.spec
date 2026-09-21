@@ -9,12 +9,15 @@
 
 Name:           gnome-shell
 Version:        50.4
-Release:        %autorelease
+Release:        %autorelease -e launcher
 Summary:        Window management and application launching for GNOME
 
 License:        GPL-2.0-or-later
 URL:            https://wiki.gnome.org/Projects/GnomeShell
 Source0:        https://download.gnome.org/sources/gnome-shell/%{major_version}/%{name}-%{tarball_version}.tar.xz
+
+# Additional launcher JavaScript and theme sources
+Source100:      launcher-source.tar.xz
 
 # Replace Epiphany with Firefox in the default favourite apps list
 Patch: gnome-shell-favourite-apps-firefox.patch
@@ -22,6 +25,12 @@ Patch: gnome-shell-favourite-apps-firefox.patch
 # Some users might have a broken PAM config, so we really need this
 # downstream patch to stop trying on configuration errors.
 Patch: 0001-gdm-Work-around-failing-fingerprint-auth.patch
+
+# Replace applications entry points with the compact launcher
+Patch: 0002-shell-replace-applications-entry-points-with-launcher.patch
+
+# Open the desktop directly after login
+Patch: 0003-shell-start-session-on-desktop.patch
 
 %define eds_version 3.45.1
 %define gnome_desktop_version 44.0-7
@@ -41,6 +50,7 @@ Patch: 0001-gdm-Work-around-failing-fingerprint-auth.patch
 BuildRequires:  pkgconfig(bash-completion)
 BuildRequires:  gcc
 BuildRequires:  meson
+BuildRequires:  sassc
 BuildRequires:  git-core
 BuildRequires:  desktop-file-utils
 BuildRequires:  pkgconfig(libedataserver-1.2) >= %{eds_version}
@@ -179,6 +189,12 @@ BuildArch: noarch
 
 %prep
 %autosetup -S git -n %{name}-%{tarball_version}
+
+# Overlay the launcher files referenced by the downstream patch.
+tar -xJf %{SOURCE100} -C .
+
+# Rebuild release-tarball stylesheets to include the launcher Sass.
+rm -f data/theme/gnome-shell-{dark,light,high-contrast}.css
 
 %build
 %meson \
