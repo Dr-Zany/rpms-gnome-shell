@@ -8,7 +8,7 @@ Keep the existing history and use two remotes:
 | --- | --- |
 | `origin` | Your private repository; push your custom work here |
 | `upstream` | `https://src.fedoraproject.org/rpms/gnome-shell.git` |
-| `main` | Your customized Fedora 44 package, tracking `origin/main` |
+| `develop` | Your customized Fedora 44 package, tracking `origin/develop` |
 | `upstream/f44` | Fedora 44 packaging updates to review and merge |
 
 Fetching from Fedora only downloads its changes. Merging brings those changes
@@ -44,10 +44,10 @@ changes with `git add <paths>`. Check the staged diff, commit, and push:
 ```bash
 git diff --cached
 git commit -m "Add desktop launcher and direct desktop login"
-git push -u origin main
+git push -u origin develop
 ```
 
-Set `main` as the default branch on your Git host. Generated RPMs and archives
+Set `develop` as the default branch on your Git host. Generated RPMs and archives
 stay in the ignored `build/` directory. Subsequent clones of your private repo
 need the Fedora remote added locally:
 
@@ -62,7 +62,7 @@ Start with a clean working tree. Fetch and review Fedora 44 changes, then merge
 on a temporary branch (choose a fresh branch name for each update):
 
 ```bash
-git switch main
+git switch develop
 git fetch upstream
 git log --oneline HEAD..upstream/f44
 git diff HEAD...upstream/f44 -- gnome-shell.spec sources
@@ -79,13 +79,13 @@ Run `make` to check patch application and build RPMs. Test on a matching Fedora
 Escape, and outside-click dismissal. Then merge and push:
 
 ```bash
-git switch main
+git switch develop
 git merge --ff-only update/f44
-git push origin main
+git push origin develop
 ```
 
 Merges preserve published history without force pushes. An ordinary `git pull`
-on `main` updates from your private repository; Fedora updates are explicit.
+on `develop` updates from your private repository; Fedora updates are explicit.
 Moving to a new Fedora release is a separate upgrade of the build target,
 container, dependencies, and patches.
 
