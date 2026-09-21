@@ -1,2 +1,8 @@
 /gnome-shell-*.tar.xz
 /gnome-shell-*-build
+/.build-*.log
+/gnome-shell-*.src.rpm
+/x86_64
+/noarch
+/launcher-source.tar.xz
+/build/
