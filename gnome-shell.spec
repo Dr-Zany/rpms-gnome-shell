@@ -9,7 +9,7 @@
 
 Name:           gnome-shell
 Version:        50.5
-Release:        %autorelease -e launcher
+Release:        1.launcher%{?dist}
 Summary:        Window management and application launching for GNOME
 
 License:        GPL-2.0-or-later
