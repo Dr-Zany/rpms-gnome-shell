@@ -5,7 +5,7 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"build": {
 		"context": "../",
-		"dockerfile": ".devcontainer/Dockerfile"
+		"dockerfile": "./Dockerfile"
 	},
 
 	// Add the IDs of extensions you want installed when the container is created in the array below.
