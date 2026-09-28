@@ -8,7 +8,7 @@
 %endif
 
 Name:           gnome-shell
-Version:        50.4
+Version:        50.5
 Release:        %autorelease -e launcher
 Summary:        Window management and application launching for GNOME
 
